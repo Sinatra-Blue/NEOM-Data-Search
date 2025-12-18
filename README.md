@@ -1,104 +1,187 @@
-# NEOM Data Search v2
+# 🦭 NEOM Data Search
 
-An improved semantic search tool for NEOM marine research files with structured metadata filtering.
+A semantic search tool for finding your way through NEOM's marine research files. No more clicking through endless folders — just search like you'd ask a colleague!
 
-## What's New in v2
+![dugongs](https://github.com/user-attachments/assets/4e80f0dc-655b-48a4-bdea-4a9d2e679f1e)
 
-- **Structured metadata search**: Searches against curated metadata (filename, species, activity, column/field names) rather than raw file contents
-- **Faceted filtering**: Filter by Species, Activity type, and File type using dropdowns
-- **Better relevance**: Results are ranked by how well they match your query's intent, not just keyword occurrence
-- **Cleaner UI**: Modern dark interface with clear result cards showing file type, species, and available fields
 
-## Files
+*Our unofficial mascots are not impressed by disorganised data.*
 
-- `build_index.py` - Script to build the search index from metadata CSV files
-- `search_service.py` - FastAPI backend with semantic search and filtering
-- `sentence_model.py` - Embedding model loader
-- `frontend.html` - Web interface
-- `requirements.txt` - Python dependencies
+---
 
-## Setup
+## ✨ What Does It Do?
 
-### 1. Create and activate a virtual environment
+Ever tried to find "that shapefile with the dugong feeding trails from the Sharma survey"? This tool lets you search across **shapefiles, geodatabases, CSVs, PDFs, and more** using plain English queries.
+
+- 🔍 **Semantic search** — Type "dugong feeding habitat" and find relevant files, even if they don't contain those exact words
+- 🐋 **Filter by species** — Marine mammals, sharks & rays, turtles, birds, fish, corals, you name it
+- 📍 **Filter by location** — NEOM sites, Red Sea locations, islands, reefs
+- 📊 **Filter by survey type** — Transects, tagging, aerial surveys, BRUVs, monitoring programmes
+- 🗂️ **Filter by file type** — Geodatabase, shapefile, CSV, Excel, PDF, GPX
+- ⚡ **Properly fast** — Pre-computed embeddings mean instant results
+
+---
+
+## 🚀 Getting Started
+
+### 1. Clone the repo
 
 ```bash
-# Windows
+git clone https://github.com/Sinatra-Blue/NEOM-Data-Search.git
+cd NEOM-Data-Search
+```
+
+### 2. Set up your environment
+
+**Windows:**
+```bash
 python -m venv venv
 venv\Scripts\activate
+```
 
-# Linux/macOS
+**Mac/Linux:**
+```bash
 python3 -m venv venv
 source venv/bin/activate
 ```
 
-### 2. Install dependencies
+### 3. Install the dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Build the search index
+### 4. Scan your data files
 
-Copy your metadata CSV files to this directory:
-- `csv_xlsx_tables_metadata.csv`
-- `gdb_layer_metadata.csv`
-- `shp_layer_metadata.csv`
-- `images_layer_metadata.csv`
+First, edit `scan_species_mentions.py` to point to your data folder:
 
-Then run:
+```python
+ROOT_PATH = "E:\\"  # Change this to wherever your data lives
+```
+
+Then run the scan (grab a cuppa, this takes about 30 mins for ~250GB):
+
+```bash
+python scan_species_mentions.py
+```
+
+### 5. Build the search index
 
 ```bash
 python build_index.py
 ```
 
-This will create:
-- `search_index.json` - Unified metadata records
-- `search_embeddings.npy` - Vector embeddings for semantic search
-
-### 4. Run the search service
+### 6. Fire it up!
 
 ```bash
 uvicorn search_service:app --reload
 ```
 
-### 5. Open the web interface
+Then open your browser to: **http://127.0.0.1:8000**
 
-Navigate to: http://127.0.0.1:8000/
+---
 
-## How It Works
+## 🔧 How It Works
 
-### Search Modes
+### The Scan
 
-1. **Semantic Search**: Enter natural language queries like "dugong feeding habitat" or "turtle satellite tracking data". The system finds files whose metadata is semantically similar to your query.
+The scanner reads through your files (shapefiles, geodatabases, CSVs, PDFs, etc.) and looks for:
 
-2. **Faceted Filters**: Use the dropdowns to filter by:
-   - Species (Bird, Cetaceans, Corals, Flora And Fauna, Flying Fish, Turtles)
-   - Activity (Restoration, Species Management, Species_Recovery, Study, Survey)
-   - File Type (spreadsheet, geodatabase, shapefile, image)
+- **Species mentions** — dugong, dolphin, turtle, shark, coral, seagrass...
+- **Place names** — NEOM, Sharma, Magna, Aqaba, Red Sea...
+- **Survey types** — transect, tagging, BRUV, aerial, monitoring...
+- **Data types** — coordinates, depth, abundance, behaviour...
+- **Conservation terms** — protected, endangered, restoration...
 
-3. **Regex Filters**: Use include/exclude patterns for precise matching (e.g., `dugong.*\.csv` to find CSV files with "dugong" in the name)
+It saves all this to `species_mentions_scan.csv`.
 
-### What Gets Indexed
+### The Index
 
-For each file, the following metadata is combined into searchable text:
-- Filename and path keywords
-- Species and activity tags
-- Column names (for spreadsheets)
-- Field names (for geodatabases and shapefiles)
-- Geometry types (for spatial files)
+The build script takes that CSV and creates:
+- `search_index.json` — All the searchable metadata
+- `search_embeddings.npy` — Vector embeddings for semantic matching
 
-This means when you search for "feeding trails", you'll find files that are *about* feeding trails (based on their metadata), not files that just happen to contain those words somewhere in their contents.
+### The Search
 
-## API Endpoints
+When you search for "turtle nesting beaches", the system:
+1. Converts your query into a vector embedding
+2. Finds files with semantically similar metadata
+3. Ranks them by relevance
+4. Applies any filters you've selected
 
-- `GET /` - Web interface
-- `GET /api/filters` - Available filter options
-- `GET /api/search` - Search endpoint
-  - `q` - Semantic search query
-  - `species` - Filter by species
-  - `activity` - Filter by activity
-  - `file_type` - Filter by file type
-  - `include` - Regex include pattern
-  - `exclude` - Regex exclude pattern
-  - `limit` - Max results (default 100)
-- `GET /api/stats` - Index statistics
+So you find files that are *about* turtle nesting beaches, not just files that happen to contain those words somewhere random.
+
+---
+
+## 🎨 Customising
+
+Want to add more species, places, or search terms? Edit the `SEARCH_CATEGORIES` dictionary in `scan_species_mentions.py`:
+
+```python
+SEARCH_CATEGORIES = {
+    'marine_mammals': [
+        'dugong', 'dolphin', 'whale', ...
+    ],
+    'places': [
+        'NEOM', 'Sharma', 'Aqaba', ...
+    ],
+    # Add your own!
+    'your_category': [
+        'term1', 'term2', 'term3',
+    ],
+}
+```
+
+Then re-run the scan and rebuild the index.
+
+---
+
+## 📁 What's In The Box
+
+| File | What it does |
+|------|--------------|
+| `scan_species_mentions.py` | Scans your data files for species, places, etc. |
+| `build_index.py` | Builds the search index from scan results |
+| `search_service.py` | FastAPI backend that powers the search |
+| `sentence_model.py` | Loads the embedding model |
+| `frontend.html` | The web interface |
+| `requirements.txt` | Python dependencies |
+| `dugongs.png` | Our grumpy mascots |
+
+---
+
+## 🔌 API Endpoints
+
+If you want to integrate this with other tools:
+
+| Endpoint | What you get |
+|----------|--------------|
+| `GET /` | The web interface |
+| `GET /api/filters` | Available filter options |
+| `GET /api/search` | Search results (supports `q`, `species`, `places`, `file_type`, etc.) |
+| `GET /api/stats` | Index statistics |
+
+---
+
+## 🛠️ Tech Stack
+
+- [FastAPI](https://fastapi.tiangolo.com/) — Backend API
+- [Sentence Transformers](https://www.sbert.net/) — Semantic embeddings (all-MiniLM-L6-v2)
+- [GeoPandas](https://geopandas.org/) — Reading shapefiles and geodatabases
+- [PyPDF2](https://pypdf2.readthedocs.io/) — PDF text extraction
+
+---
+
+## 📝 Notes
+
+- First run downloads ~500MB of ML models — make sure you've got decent wifi
+- The scanner skips images and media files (no point reading pixels for species names!)
+- Generated files (`species_mentions_scan.csv`, `search_index.json`, `search_embeddings.npy`) are git-ignored since they're specific to your data
+
+---
+
+## 🦭 Acknowledgements
+
+Built for NEOM marine research data management.
+
+The grumpy dugongs approve this tool. Reluctantly.
