@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEOM Data Search v2</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #0a1a1f;
+            --bg-card: #0f2429;
+            --bg-hover: #163038;
+            --border: #1e4a52;
+            --text-primary: #e8f4f2;
+            --text-secondary: #8cb9b4;
+            --text-muted: #5a8a84;
+            --accent-teal: #2dd4bf;
+            --accent-teal-dim: #14b8a6;
+            --accent-blue: #38bdf8;
+            --accent-green: #4ade80;
+            --accent-amber: #fbbf24;
+            --accent-rose: #fb7185;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo-img {
+            width: 80px;
+            height: auto;
+            border-radius: 12px;
+        }
+
+        .header-text h1 {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-text h1 .version {
+            font-size: 0.7rem;
+            font-weight: 500;
+            background: var(--accent-teal);
+            color: var(--bg-deep);
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+            font-size: 0.9rem;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 1.25rem;
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .stat-item strong {
+            color: var(--text-secondary);
+        }
+
+        /* Main layout */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 1.5rem;
+        }
+
+        /* Sidebar filters */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .filter-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem;
+        }
+
+        .filter-section h3 {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.75rem;
+        }
+
+        .filter-group {
+            margin-bottom: 0.75rem;
+        }
+
+        .filter-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .filter-group label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 0.3rem;
+        }
+
+        .filter-group select {
+            width: 100%;
+            padding: 0.5rem 0.6rem;
+            font-family: inherit;
+            font-size: 0.8rem;
+            background: var(--bg-deep);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .filter-group select:focus {
+            outline: none;
+            border-color: var(--accent-teal);
+        }
+
+        .filter-group input[type="text"] {
+            width: 100%;
+            padding: 0.5rem 0.6rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            background: var(--bg-deep);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+        }
+
+        .filter-group input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent-teal);
+        }
+
+        .filter-group input::placeholder {
+            color: var(--text-muted);
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .btn-clear {
+            width: 100%;
+            padding: 0.5rem;
+            font-family: inherit;
+            font-size: 0.8rem;
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 0.5rem;
+        }
+
+        .btn-clear:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        /* Main content */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 1rem 1.25rem 1rem 3rem;
+            font-size: 1.05rem;
+            font-family: inherit;
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--accent-teal);
+            box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.15);
+        }
+
+        .search-box input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-box .icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2rem;
+        }
+
+        .search-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn-search {
+            padding: 0.75rem 1.75rem;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 500;
+            background: var(--accent-teal);
+            color: var(--bg-deep);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .btn-search:hover {
+            background: var(--accent-teal-dim);
+        }
+
+        .btn-search:active {
+            transform: scale(0.98);
+        }
+
+        /* Results */
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .results-count {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .results-count strong {
+            color: var(--accent-teal);
+        }
+
+        .results-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .result-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.9rem 1rem;
+            transition: border-color 0.2s, background-color 0.2s;
+        }
+
+        .result-card:hover {
+            border-color: var(--accent-teal-dim);
+            background: var(--bg-hover);
+        }
+
+        .result-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 0.35rem;
+        }
+
+        .result-name {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            word-break: break-all;
+        }
+
+        .result-score {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--accent-teal);
+            background: rgba(45, 212, 191, 0.1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .result-path {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            word-break: break-all;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+        }
+
+        .tag {
+            font-size: 0.65rem;
+            font-weight: 500;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .tag-type {
+            background: rgba(56, 189, 248, 0.15);
+            color: #7dd3fc;
+        }
+
+        .tag-marine_mammals { background: rgba(45, 212, 191, 0.15); color: #5eead4; }
+        .tag-sharks_rays { background: rgba(251, 113, 133, 0.15); color: #fda4af; }
+        .tag-reptiles { background: rgba(74, 222, 128, 0.15); color: #86efac; }
+        .tag-fish { background: rgba(56, 189, 248, 0.15); color: #7dd3fc; }
+        .tag-birds { background: rgba(251, 191, 36, 0.15); color: #fcd34d; }
+        .tag-invertebrates_habitat { background: rgba(192, 132, 252, 0.15); color: #d8b4fe; }
+        .tag-survey_types { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; }
+        .tag-places { background: rgba(251, 146, 60, 0.15); color: #fdba74; }
+        .tag-data_types { background: rgba(129, 140, 248, 0.15); color: #a5b4fc; }
+        .tag-conservation { background: rgba(52, 211, 153, 0.15); color: #6ee7b7; }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .loading .spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent-teal);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 0.75rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state h3 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 1000px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            
+            .filter-section {
+                flex: 1;
+                min-width: 200px;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="/static/dugongs.png" alt="Grumpy Dugongs" class="logo-img">
+            <div class="header-text">
+                <h1>
+                    NEOM Data Search
+                    <span class="version">v2.0</span>
+                </h1>
+                <p class="subtitle">Search marine research files by species, location, survey type, and more</p>
+                <div class="stats-bar" id="statsBar"></div>
+            </div>
+        </header>
+
+        <div class="main-layout">
+            <aside class="sidebar">
+                <!-- Species filters -->
+                <div class="filter-section">
+                    <h3>🐋 Species</h3>
+                    <div class="filter-group">
+                        <label>Marine Mammals</label>
+                        <select id="filter_marine_mammals"></select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Sharks & Rays</label>
+                        <select id="filter_sharks_rays"></select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Reptiles</label>
+                        <select id="filter_reptiles"></select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Fish</label>
+                        <select id="filter_fish"></select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Birds</label>
+                        <select id="filter_birds"></select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Invertebrates & Habitat</label>
+                        <select id="filter_invertebrates_habitat"></select>
+                    </div>
+                </div>
+
+                <!-- Context filters -->
+                <div class="filter-section">
+                    <h3>📍 Context</h3>
+                    <div class="filter-group">
+                        <label>Survey Type</label>
+                        <select id="filter_survey_types"></select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Place</label>
+                        <select id="filter_places"></select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Data Type</label>
+                        <select id="filter_data_types"></select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Conservation</label>
+                        <select id="filter_conservation"></select>
+                    </div>
+                </div>
+
+                <!-- File type & regex -->
+                <div class="filter-section">
+                    <h3>📁 File Options</h3>
+                    <div class="filter-group">
+                        <label>File Type</label>
+                        <select id="filter_file_type">
+                            <option value="">All types</option>
+                            <option value="geodatabase">Geodatabase</option>
+                            <option value="shapefile">Shapefile</option>
+                            <option value="csv">CSV</option>
+                            <option value="excel">Excel</option>
+                            <option value="pdf">PDF</option>
+                            <option value="gpx">GPX</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Include (regex)</label>
+                        <input type="text" id="includeRegex" placeholder="e.g. 2023">
+                    </div>
+                    <div class="filter-group">
+                        <label>Exclude (regex)</label>
+                        <input type="text" id="excludeRegex" placeholder="e.g. draft|old">
+                    </div>
+                    <button class="btn-clear" onclick="clearAll()">Clear All Filters</button>
+                </div>
+            </aside>
+
+            <main class="main-content">
+                <div class="search-box">
+                    <span class="icon">🔍</span>
+                    <input 
+                        type="text" 
+                        id="searchQuery" 
+                        placeholder="Search files... e.g. 'dugong feeding habitat' or 'turtle nesting survey'"
+                        autofocus
+                    >
+                </div>
+                <div class="search-actions">
+                    <button class="btn-search" onclick="runSearch()">Search</button>
+                </div>
+
+                <div id="resultsContainer">
+                    <div class="empty-state">
+                        <h3>Start searching</h3>
+                        <p>Enter a search term or select filters to find files</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        const CATEGORIES = [
+            'marine_mammals', 'sharks_rays', 'reptiles', 'fish', 'birds',
+            'invertebrates_habitat', 'survey_types', 'places', 'data_types', 'conservation'
+        ];
+
+        const CATEGORY_LABELS = {
+            'marine_mammals': 'Marine Mammals',
+            'sharks_rays': 'Sharks & Rays',
+            'reptiles': 'Reptiles',
+            'fish': 'Fish',
+            'birds': 'Birds',
+            'invertebrates_habitat': 'Habitat',
+            'survey_types': 'Survey',
+            'places': 'Place',
+            'data_types': 'Data',
+            'conservation': 'Conservation'
+        };
+
+        // Load filter options
+        async function loadFilters() {
+            try {
+                const res = await fetch('/api/filters');
+                const data = await res.json();
+                
+                for (const cat of CATEGORIES) {
+                    const select = document.getElementById(`filter_${cat}`);
+                    if (!select) continue;
+                    
+                    // Clear and add default option
+                    select.innerHTML = `<option value="">All ${CATEGORY_LABELS[cat] || cat}</option>`;
+                    
+                    // Add options
+                    const options = data.options[cat] || [];
+                    options.forEach(opt => {
+                        const el = document.createElement('option');
+                        el.value = opt;
+                        el.textContent = opt;
+                        select.appendChild(el);
+                    });
+                }
+            } catch (err) {
+                console.error('Failed to load filters:', err);
+            }
+        }
+
+        // Load stats
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/stats');
+                const stats = await res.json();
+                
+                document.getElementById('statsBar').innerHTML = `
+                    <span class="stat-item"><strong>${stats.total_files.toLocaleString()}</strong> files indexed</span>
+                `;
+            } catch (err) {
+                console.error('Failed to load stats:', err);
+            }
+        }
+
+        // Run search
+        async function runSearch() {
+            const container = document.getElementById('resultsContainer');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div><div>Searching...</div></div>';
+
+            const params = new URLSearchParams();
+            
+            // Search query
+            const q = document.getElementById('searchQuery').value.trim();
+            if (q) params.set('q', q);
+            
+            // Category filters
+            for (const cat of CATEGORIES) {
+                const select = document.getElementById(`filter_${cat}`);
+                if (select && select.value) {
+                    params.set(cat, select.value);
+                }
+            }
+            
+            // File type
+            const fileType = document.getElementById('filter_file_type').value;
+            if (fileType) params.set('file_type', fileType);
+            
+            // Regex filters
+            const include = document.getElementById('includeRegex').value.trim();
+            if (include) params.set('include', include);
+            
+            const exclude = document.getElementById('excludeRegex').value.trim();
+            if (exclude) params.set('exclude', exclude);
+
+            try {
+                const res = await fetch(`/api/search?${params.toString()}`);
+                const data = await res.json();
+
+                if (data.error) {
+                    container.innerHTML = `<div class="error">${data.error}</div>`;
+                    return;
+                }
+
+                renderResults(data);
+            } catch (err) {
+                container.innerHTML = `<div class="error">Search failed: ${err.message}</div>`;
+            }
+        }
+
+        // Render results
+        function renderResults(data) {
+            const container = document.getElementById('resultsContainer');
+            
+            if (data.results.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No results found</h3>
+                        <p>Try adjusting your search terms or filters</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+                <div class="results-header">
+                    <span class="results-count">
+                        Showing <strong>${data.showing}</strong> of <strong>${data.total_matches.toLocaleString()}</strong> results
+                    </span>
+                </div>
+                <div class="results-list">
+            `;
+
+            data.results.forEach(r => {
+                const scoreHtml = r.score !== undefined 
+                    ? `<span class="result-score">${r.score.toFixed(3)}</span>` 
+                    : '';
+
+                // Build tags from categories
+                let tagsHtml = `<span class="tag tag-type">${r.file_type}</span>`;
+                
+                for (const cat of CATEGORIES) {
+                    if (r[cat]) {
+                        // Show first few items only
+                        const items = r[cat].split(', ').slice(0, 3);
+                        const label = CATEGORY_LABELS[cat] || cat;
+                        items.forEach(item => {
+                            tagsHtml += `<span class="tag tag-${cat}" title="${label}">${item}</span>`;
+                        });
+                        if (r[cat].split(', ').length > 3) {
+                            tagsHtml += `<span class="tag tag-${cat}">+${r[cat].split(', ').length - 3} more</span>`;
+                        }
+                    }
+                }
+
+                html += `
+                    <div class="result-card">
+                        <div class="result-header">
+                            <span class="result-name">${r.file_name}</span>
+                            ${scoreHtml}
+                        </div>
+                        <div class="result-path">${r.file_path}</div>
+                        <div class="result-tags">${tagsHtml}</div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // Clear all filters
+        function clearAll() {
+            document.getElementById('searchQuery').value = '';
+            
+            for (const cat of CATEGORIES) {
+                const select = document.getElementById(`filter_${cat}`);
+                if (select) select.value = '';
+            }
+            
+            document.getElementById('filter_file_type').value = '';
+            document.getElementById('includeRegex').value = '';
+            document.getElementById('excludeRegex').value = '';
+            
+            document.getElementById('resultsContainer').innerHTML = `
+                <div class="empty-state">
+                    <h3>Start searching</h3>
+                    <p>Enter a search term or select filters to find files</p>
+                </div>
+            `;
+        }
+
+        // Keyboard shortcuts
+        document.getElementById('searchQuery').addEventListener('keydown', e => {
+            if (e.key === 'Enter') runSearch();
+        });
+
+        ['includeRegex', 'excludeRegex'].forEach(id => {
+            document.getElementById(id).addEventListener('keydown', e => {
+                if (e.key === 'Enter') runSearch();
+            });
+        });
+
+        // Auto-search on filter change
+        CATEGORIES.forEach(cat => {
+            const el = document.getElementById(`filter_${cat}`);
+            if (el) {
+                el.addEventListener('change', () => {
+                    const hasAnyFilter = CATEGORIES.some(c => {
+                        const s = document.getElementById(`filter_${c}`);
+                        return s && s.value;
+                    }) || document.getElementById('searchQuery').value.trim();
+                    
+                    if (hasAnyFilter) runSearch();
+                });
+            }
+        });
+
+        document.getElementById('filter_file_type').addEventListener('change', () => {
+            const hasQuery = document.getElementById('searchQuery').value.trim();
+            const hasFilters = CATEGORIES.some(c => {
+                const s = document.getElementById(`filter_${c}`);
+                return s && s.value;
+            }) || document.getElementById('filter_file_type').value;
+            
+            if (hasQuery || hasFilters) runSearch();
+        });
+
+        // Init
+        loadFilters();
+        loadStats();
+    </script>
+</body>
+</html>
